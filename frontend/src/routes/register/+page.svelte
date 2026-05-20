@@ -1,5 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { setToken } from '$lib/auth.js';
 
 	let email = $state('');
 	let password = $state('');
@@ -61,7 +62,7 @@
 				return;
 			}
 
-			localStorage.setItem('token', data.token);
+			setToken(data.token);
 			goto('/discover');
 		} catch {
 			errors.general = 'Server nicht erreichbar.';
