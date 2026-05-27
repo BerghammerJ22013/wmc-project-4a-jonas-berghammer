@@ -1,10 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
 	import { getToken, API } from '$lib/auth.js';
+	import { userStore } from '$lib/userStore.svelte.js';
 
-	let user = $state(null);
 	let allSports = $state([]);
-	let loading = $state(true);
+	let sportsLoaded = $state(false);
 	let error = $state('');
 
 	// picture
@@ -14,7 +14,7 @@
 	let pictureMsgOk = $state(false);
 	let fileInput;
 
-	// sports
+	// sports selection
 	let selectedSports = $state([]);
 	let savingSports = $state(false);
 	let sportsMsg = $state('');
@@ -25,38 +25,37 @@
 	let age = $state('');
 	let location = $state('');
 	let bio = $state('');
+	let formInitialized = $state(false);
 	let savingData = $state(false);
 	let dataMsg = $state('');
 	let dataMsgOk = $state(false);
 
+	// Init form fields once user is available in store
+	$effect(() => {
+		const u = userStore.user;
+		if (u && !formInitialized) {
+			name = u.name || '';
+			age = u.age ?? '';
+			location = u.location || '';
+			bio = u.bio || '';
+			selectedSports = u.sports?.map((s) => s.id) ?? [];
+			if (u.profile_picture) pictureUrl = `${API}/uploads/${u.profile_picture}`;
+			formInitialized = true;
+		}
+	});
+
 	onMount(async () => {
 		try {
-			const token = getToken();
-			const headers = { Authorization: `Bearer ${token}` };
+			const res = await fetch(`${API}/sports`);
+			allSports = await res.json();
+			sportsLoaded = true;
+		} catch {
+			error = 'Sportarten konnten nicht geladen werden';
+		}
 
-			const [userRes, sportsRes] = await Promise.all([
-				fetch(`${API}/users/me`, { headers }),
-				fetch(`${API}/sports`),
-			]);
-
-			if (!userRes.ok) throw new Error('Profil konnte nicht geladen werden');
-
-			user = await userRes.json();
-			allSports = await sportsRes.json();
-			selectedSports = user.sports.map((s) => s.id);
-
-			name = user.name || '';
-			age = user.age ?? '';
-			location = user.location || '';
-			bio = user.bio || '';
-
-			if (user.profile_picture) {
-				pictureUrl = `${API}/uploads/${user.profile_picture}`;
-			}
-		} catch (e) {
-			error = e.message;
-		} finally {
-			loading = false;
+		// Fallback: user not yet in store (e.g. direct page load)
+		if (!userStore.user && !userStore.loading) {
+			await userStore.load();
 		}
 	});
 
@@ -79,6 +78,7 @@
 			const data = await res.json();
 			if (res.ok) {
 				pictureUrl = `${API}/uploads/${data.filename}`;
+				userStore.update({ profile_picture: data.filename });
 				pictureMsg = 'Profilbild gespeichert!';
 				pictureMsgOk = true;
 			} else {
@@ -115,6 +115,8 @@
 				body: JSON.stringify({ sports: selectedSports }),
 			});
 			if (res.ok) {
+				const updatedSports = allSports.filter((s) => selectedSports.includes(s.id));
+				userStore.update({ sports: updatedSports });
 				sportsMsg = 'Sportarten gespeichert!';
 				sportsMsgOk = true;
 			} else {
@@ -135,6 +137,7 @@
 		dataMsg = '';
 
 		try {
+			const u = userStore.user;
 			const res = await fetch(`${API}/users/me`, {
 				method: 'PUT',
 				headers: {
@@ -146,15 +149,15 @@
 					age: age !== '' ? Number(age) : null,
 					location: location || null,
 					bio: bio || null,
-					latitude: user.latitude,
-					longitude: user.longitude,
-					search_radius: user.search_radius,
-					language: user.language,
-					onboarding_complete: user.onboarding_complete,
+					latitude: u?.latitude,
+					longitude: u?.longitude,
+					search_radius: u?.search_radius,
+					language: u?.language,
+					onboarding_complete: u?.onboarding_complete,
 				}),
 			});
 			if (res.ok) {
-				user = { ...user, name, age: age !== '' ? Number(age) : null, location, bio };
+				userStore.update({ name, age: age !== '' ? Number(age) : null, location, bio });
 				dataMsg = 'Daten gespeichert!';
 				dataMsgOk = true;
 			} else {
@@ -177,7 +180,7 @@
 		<h1 class="text-xl font-bold text-gray-900">Mein Profil</h1>
 	</div>
 
-	{#if loading}
+	{#if userStore.loading || !userStore.user}
 		<div class="flex justify-center items-center py-24">
 			<div class="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
 		</div>
@@ -186,6 +189,7 @@
 			{error}
 		</div>
 	{:else}
+		{@const u = userStore.user}
 		<div class="max-w-lg mx-auto px-4 py-6 space-y-4">
 
 			<!-- Avatar + Name -->
@@ -215,8 +219,8 @@
 				<input bind:this={fileInput} type="file" accept="image/*" class="hidden" onchange={uploadPicture} />
 
 				<div class="text-center">
-					<p class="font-semibold text-gray-900">{user.name || 'Kein Name'}</p>
-					<p class="text-sm text-gray-500">{user.email}</p>
+					<p class="font-semibold text-gray-900">{u.name || 'Kein Name'}</p>
+					<p class="text-sm text-gray-500">{u.email}</p>
 				</div>
 
 				{#if uploading}
@@ -236,20 +240,24 @@
 				<h2 class="font-semibold text-gray-900 mb-1">Meine Sportarten</h2>
 				<p class="text-xs text-gray-400 mb-4">Wähle alle Sportarten die du ausübst</p>
 
-				<div class="flex flex-wrap gap-2 mb-4">
-					{#each allSports as sport}
-						{@const active = selectedSports.includes(sport.id)}
-						<button
-							onclick={() => toggleSport(sport.id)}
-							class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors cursor-pointer
-								{active
-									? 'bg-orange-500 border-orange-500 text-white'
-									: 'bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-500'}"
-						>
-							{sport.name}
-						</button>
-					{/each}
-				</div>
+				{#if !sportsLoaded}
+					<div class="h-10 bg-gray-100 rounded-xl animate-pulse mb-4"></div>
+				{:else}
+					<div class="flex flex-wrap gap-2 mb-4">
+						{#each allSports as sport}
+							{@const active = selectedSports.includes(sport.id)}
+							<button
+								onclick={() => toggleSport(sport.id)}
+								class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors cursor-pointer
+									{active
+										? 'bg-orange-500 border-orange-500 text-white'
+										: 'bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-500'}"
+							>
+								{sport.name}
+							</button>
+						{/each}
+					</div>
+				{/if}
 
 				<div class="flex items-center justify-between">
 					<span class="text-xs text-gray-400">{selectedSports.length} ausgewählt</span>
@@ -272,7 +280,6 @@
 				<h2 class="font-semibold text-gray-900 mb-4">Persönliche Daten</h2>
 
 				<div class="space-y-3">
-					<!-- Name -->
 					<div>
 						<label class="block text-xs font-medium text-gray-500 mb-1" for="name">Name</label>
 						<input
@@ -284,7 +291,6 @@
 						/>
 					</div>
 
-					<!-- Alter -->
 					<div>
 						<label class="block text-xs font-medium text-gray-500 mb-1" for="age">Alter</label>
 						<input
@@ -298,7 +304,6 @@
 						/>
 					</div>
 
-					<!-- Ort -->
 					<div>
 						<label class="block text-xs font-medium text-gray-500 mb-1" for="location">Wohnort</label>
 						<input
@@ -310,7 +315,6 @@
 						/>
 					</div>
 
-					<!-- Bio -->
 					<div>
 						<label class="block text-xs font-medium text-gray-500 mb-1" for="bio">Über mich</label>
 						<textarea
