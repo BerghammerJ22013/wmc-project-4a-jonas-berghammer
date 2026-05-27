@@ -117,6 +117,13 @@ app.put('/users/me/sports', auth, async (req, res) => {
   res.json({ success: true });
 });
 
+app.post('/users/me/picture', auth, upload.single('picture'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const db = await getDb();
+  await db.run('UPDATE users SET profile_picture = ? WHERE id = ?', req.file.filename, req.user.id);
+  res.json({ filename: req.file.filename });
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 await createTables();
