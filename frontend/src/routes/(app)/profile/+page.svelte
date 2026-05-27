@@ -20,6 +20,15 @@
 	let sportsMsg = $state('');
 	let sportsMsgOk = $state(false);
 
+	// personal data
+	let name = $state('');
+	let age = $state('');
+	let location = $state('');
+	let bio = $state('');
+	let savingData = $state(false);
+	let dataMsg = $state('');
+	let dataMsgOk = $state(false);
+
 	onMount(async () => {
 		try {
 			const token = getToken();
@@ -35,6 +44,11 @@
 			user = await userRes.json();
 			allSports = await sportsRes.json();
 			selectedSports = user.sports.map((s) => s.id);
+
+			name = user.name || '';
+			age = user.age ?? '';
+			location = user.location || '';
+			bio = user.bio || '';
 
 			if (user.profile_picture) {
 				pictureUrl = `${API}/uploads/${user.profile_picture}`;
@@ -113,6 +127,46 @@
 			sportsMsgOk = false;
 		} finally {
 			savingSports = false;
+		}
+	}
+
+	async function savePersonalData() {
+		savingData = true;
+		dataMsg = '';
+
+		try {
+			const res = await fetch(`${API}/users/me`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${getToken()}`,
+				},
+				body: JSON.stringify({
+					name: name || null,
+					age: age !== '' ? Number(age) : null,
+					location: location || null,
+					bio: bio || null,
+					latitude: user.latitude,
+					longitude: user.longitude,
+					search_radius: user.search_radius,
+					language: user.language,
+					onboarding_complete: user.onboarding_complete,
+				}),
+			});
+			if (res.ok) {
+				user = { ...user, name, age: age !== '' ? Number(age) : null, location, bio };
+				dataMsg = 'Daten gespeichert!';
+				dataMsgOk = true;
+			} else {
+				const data = await res.json();
+				dataMsg = data.error || 'Fehler beim Speichern';
+				dataMsgOk = false;
+			}
+		} catch {
+			dataMsg = 'Verbindungsfehler';
+			dataMsgOk = false;
+		} finally {
+			savingData = false;
 		}
 	}
 </script>
@@ -213,14 +267,75 @@
 				{/if}
 			</div>
 
-			<!-- Persönliche Daten (kommt) -->
+			<!-- Persönliche Daten -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-				<h2 class="font-semibold text-gray-900 mb-3">Persönliche Daten</h2>
-				<div class="space-y-2">
-					<div class="h-10 bg-gray-100 rounded-xl animate-pulse"></div>
-					<div class="h-10 bg-gray-100 rounded-xl animate-pulse"></div>
-					<div class="h-10 bg-gray-100 rounded-xl animate-pulse"></div>
+				<h2 class="font-semibold text-gray-900 mb-4">Persönliche Daten</h2>
+
+				<div class="space-y-3">
+					<!-- Name -->
+					<div>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="name">Name</label>
+						<input
+							id="name"
+							type="text"
+							bind:value={name}
+							placeholder="Dein Name"
+							class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+						/>
+					</div>
+
+					<!-- Alter -->
+					<div>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="age">Alter</label>
+						<input
+							id="age"
+							type="number"
+							bind:value={age}
+							placeholder="z.B. 22"
+							min="14"
+							max="99"
+							class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+						/>
+					</div>
+
+					<!-- Ort -->
+					<div>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="location">Wohnort</label>
+						<input
+							id="location"
+							type="text"
+							bind:value={location}
+							placeholder="z.B. Wien"
+							class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+						/>
+					</div>
+
+					<!-- Bio -->
+					<div>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="bio">Über mich</label>
+						<textarea
+							id="bio"
+							bind:value={bio}
+							placeholder="Erzähl etwas über dich und deinen Sport…"
+							rows="3"
+							class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"
+						></textarea>
+					</div>
 				</div>
+
+				<div class="flex items-center justify-end mt-4">
+					<button
+						onclick={savePersonalData}
+						disabled={savingData}
+						class="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+					>
+						{savingData ? 'Speichern…' : 'Speichern'}
+					</button>
+				</div>
+
+				{#if dataMsg}
+					<p class="text-xs mt-2 text-right {dataMsgOk ? 'text-green-600' : 'text-red-500'}">{dataMsg}</p>
+				{/if}
 			</div>
 
 		</div>
