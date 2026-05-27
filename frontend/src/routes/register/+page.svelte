@@ -1,6 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { setToken } from '$lib/auth.js';
+	import { userStore } from '$lib/userStore.svelte.js';
 
 	let email = $state('');
 	let password = $state('');
@@ -63,7 +64,8 @@
 			}
 
 			setToken(data.token);
-			goto('/discover');
+				await userStore.load();
+				goto('/discover');
 		} catch {
 			errors.general = 'Server nicht erreichbar.';
 		} finally {
