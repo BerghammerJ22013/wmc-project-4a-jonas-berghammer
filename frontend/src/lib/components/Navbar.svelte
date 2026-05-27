@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { logout } from '$lib/auth.js';
+	import { userStore } from '$lib/userStore.svelte.js';
 
 	const links = [
 		{
@@ -29,6 +30,7 @@
 
 	async function handleLogout() {
 		await logout();
+		userStore.clear();
 		goto('/login');
 	}
 </script>
