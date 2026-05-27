@@ -14,6 +14,12 @@
 	let pictureMsgOk = $state(false);
 	let fileInput;
 
+	// sports
+	let selectedSports = $state([]);
+	let savingSports = $state(false);
+	let sportsMsg = $state('');
+	let sportsMsgOk = $state(false);
+
 	onMount(async () => {
 		try {
 			const token = getToken();
@@ -28,6 +34,7 @@
 
 			user = await userRes.json();
 			allSports = await sportsRes.json();
+			selectedSports = user.sports.map((s) => s.id);
 
 			if (user.profile_picture) {
 				pictureUrl = `${API}/uploads/${user.profile_picture}`;
@@ -71,6 +78,43 @@
 			uploading = false;
 		}
 	}
+
+	function toggleSport(id) {
+		if (selectedSports.includes(id)) {
+			selectedSports = selectedSports.filter((s) => s !== id);
+		} else {
+			selectedSports = [...selectedSports, id];
+		}
+	}
+
+	async function saveSports() {
+		savingSports = true;
+		sportsMsg = '';
+
+		try {
+			const res = await fetch(`${API}/users/me/sports`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${getToken()}`,
+				},
+				body: JSON.stringify({ sports: selectedSports }),
+			});
+			if (res.ok) {
+				sportsMsg = 'Sportarten gespeichert!';
+				sportsMsgOk = true;
+			} else {
+				const data = await res.json();
+				sportsMsg = data.error || 'Fehler beim Speichern';
+				sportsMsgOk = false;
+			}
+		} catch {
+			sportsMsg = 'Verbindungsfehler';
+			sportsMsgOk = false;
+		} finally {
+			savingSports = false;
+		}
+	}
 </script>
 
 <div class="min-h-screen bg-gray-50">
@@ -106,7 +150,6 @@
 							</svg>
 						{/if}
 					</button>
-					<!-- Kamera-Badge -->
 					<div class="absolute bottom-0 right-0 w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center shadow pointer-events-none">
 						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" class="w-4 h-4">
 							<path d="M12 9a3.75 3.75 0 100 7.5A3.75 3.75 0 0012 9z" />
@@ -134,10 +177,40 @@
 				<p class="text-xs text-gray-400">Tippe auf das Bild um es zu ändern</p>
 			</div>
 
-			<!-- Sportarten (kommt) -->
+			<!-- Sportarten -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-				<h2 class="font-semibold text-gray-900 mb-3">Meine Sportarten</h2>
-				<div class="h-10 bg-gray-100 rounded-xl animate-pulse"></div>
+				<h2 class="font-semibold text-gray-900 mb-1">Meine Sportarten</h2>
+				<p class="text-xs text-gray-400 mb-4">Wähle alle Sportarten die du ausübst</p>
+
+				<div class="flex flex-wrap gap-2 mb-4">
+					{#each allSports as sport}
+						{@const active = selectedSports.includes(sport.id)}
+						<button
+							onclick={() => toggleSport(sport.id)}
+							class="px-3 py-1.5 rounded-full text-sm font-medium border transition-colors cursor-pointer
+								{active
+									? 'bg-orange-500 border-orange-500 text-white'
+									: 'bg-white border-gray-200 text-gray-600 hover:border-orange-300 hover:text-orange-500'}"
+						>
+							{sport.name}
+						</button>
+					{/each}
+				</div>
+
+				<div class="flex items-center justify-between">
+					<span class="text-xs text-gray-400">{selectedSports.length} ausgewählt</span>
+					<button
+						onclick={saveSports}
+						disabled={savingSports}
+						class="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+					>
+						{savingSports ? 'Speichern…' : 'Speichern'}
+					</button>
+				</div>
+
+				{#if sportsMsg}
+					<p class="text-xs mt-2 {sportsMsgOk ? 'text-green-600' : 'text-red-500'}">{sportsMsg}</p>
+				{/if}
 			</div>
 
 			<!-- Persönliche Daten (kommt) -->
