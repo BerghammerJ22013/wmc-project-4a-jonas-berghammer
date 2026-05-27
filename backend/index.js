@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import multer from 'multer';
 import { getDb } from './database.js';
 import { createTables } from './schema.js';
 import { seed } from './seed.js';
@@ -12,6 +13,7 @@ import { seed } from './seed.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
+const upload = multer({ dest: 'uploads/' });
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
@@ -68,6 +70,58 @@ app.post('/auth/login', async (req, res) => {
 // Stateless JWT – Client löscht Token, Server bestätigt nur
 app.post('/auth/logout', auth, (_req, res) => {
   res.json({ success: true });
+});
+
+// ─── Sports ──────────────────────────────────────────────────────────────────
+
+app.get('/sports', async (_req, res) => {
+  const db = await getDb();
+  res.json(await db.all('SELECT * FROM sports ORDER BY name'));
+});
+
+// ─── User / Profil ───────────────────────────────────────────────────────────
+
+app.get('/users/me', auth, async (req, res) => {
+  const db = await getDb();
+  const user = await db.get(
+    'SELECT id, email, name, age, location, latitude, longitude, search_radius, bio, profile_picture, language, onboarding_complete FROM users WHERE id = ?',
+    req.user.id,
+  );
+  const sports = await db.all(
+    'SELECT s.id, s.name FROM sports s JOIN user_sports us ON us.sport_id = s.id WHERE us.user_id = ?',
+    req.user.id,
+  );
+  res.json({ ...user, sports });
+});
+
+app.put('/users/me', auth, async (req, res) => {
+  const { name, age, location, latitude, longitude, search_radius, bio, language, onboarding_complete } = req.body;
+  const db = await getDb();
+  await db.run(
+    `UPDATE users SET name = ?, age = ?, location = ?, latitude = ?, longitude = ?,
+     search_radius = ?, bio = ?, language = ?, onboarding_complete = ? WHERE id = ?`,
+    name, age, location, latitude, longitude, search_radius, bio, language,
+    onboarding_complete ? 1 : 0, req.user.id,
+  );
+  res.json({ success: true });
+});
+
+app.put('/users/me/sports', auth, async (req, res) => {
+  const { sports } = req.body;
+  if (!Array.isArray(sports)) return res.status(400).json({ error: 'sports must be an array of ids' });
+  const db = await getDb();
+  await db.run('DELETE FROM user_sports WHERE user_id = ?', req.user.id);
+  for (const sportId of sports) {
+    await db.run('INSERT OR IGNORE INTO user_sports (user_id, sport_id) VALUES (?, ?)', req.user.id, sportId);
+  }
+  res.json({ success: true });
+});
+
+app.post('/users/me/picture', auth, upload.single('picture'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const db = await getDb();
+  await db.run('UPDATE users SET profile_picture = ? WHERE id = ?', req.file.filename, req.user.id);
+  res.json({ filename: req.file.filename });
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────

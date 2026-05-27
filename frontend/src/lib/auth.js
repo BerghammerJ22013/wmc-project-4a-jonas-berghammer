@@ -1,4 +1,4 @@
-const API = 'http://localhost:3000';
+export const API = 'http://localhost:3000';
 
 export function getToken() {
   return localStorage.getItem('token');
