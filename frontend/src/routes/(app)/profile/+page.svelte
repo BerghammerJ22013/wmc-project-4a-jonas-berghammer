@@ -7,6 +7,13 @@
 	let loading = $state(true);
 	let error = $state('');
 
+	// picture
+	let pictureUrl = $state(null);
+	let uploading = $state(false);
+	let pictureMsg = $state('');
+	let pictureMsgOk = $state(false);
+	let fileInput;
+
 	onMount(async () => {
 		try {
 			const token = getToken();
@@ -21,12 +28,49 @@
 
 			user = await userRes.json();
 			allSports = await sportsRes.json();
+
+			if (user.profile_picture) {
+				pictureUrl = `${API}/uploads/${user.profile_picture}`;
+			}
 		} catch (e) {
 			error = e.message;
 		} finally {
 			loading = false;
 		}
 	});
+
+	async function uploadPicture(e) {
+		const file = e.target.files[0];
+		if (!file) return;
+
+		uploading = true;
+		pictureMsg = '';
+
+		const formData = new FormData();
+		formData.append('picture', file);
+
+		try {
+			const res = await fetch(`${API}/users/me/picture`, {
+				method: 'POST',
+				headers: { Authorization: `Bearer ${getToken()}` },
+				body: formData,
+			});
+			const data = await res.json();
+			if (res.ok) {
+				pictureUrl = `${API}/uploads/${data.filename}`;
+				pictureMsg = 'Profilbild gespeichert!';
+				pictureMsgOk = true;
+			} else {
+				pictureMsg = data.error || 'Fehler beim Upload';
+				pictureMsgOk = false;
+			}
+		} catch {
+			pictureMsg = 'Verbindungsfehler';
+			pictureMsgOk = false;
+		} finally {
+			uploading = false;
+		}
+	}
 </script>
 
 <div class="min-h-screen bg-gray-50">
@@ -46,23 +90,48 @@
 	{:else}
 		<div class="max-w-lg mx-auto px-4 py-6 space-y-4">
 
-			<!-- Avatar -->
+			<!-- Avatar + Name -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col items-center gap-3">
-				<div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-gray-400">
-						<path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
-					</svg>
+				<div class="relative">
+					<button
+						onclick={() => fileInput.click()}
+						class="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-orange-400 cursor-pointer"
+						title="Profilbild ändern"
+					>
+						{#if pictureUrl}
+							<img src={pictureUrl} alt="Profilbild" class="w-full h-full object-cover" />
+						{:else}
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-gray-400">
+								<path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+							</svg>
+						{/if}
+					</button>
+					<!-- Kamera-Badge -->
+					<div class="absolute bottom-0 right-0 w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center shadow pointer-events-none">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" class="w-4 h-4">
+							<path d="M12 9a3.75 3.75 0 100 7.5A3.75 3.75 0 0012 9z" />
+							<path fill-rule="evenodd" d="M9.344 3.071a49.52 49.52 0 015.312 0c.967.052 1.83.585 2.332 1.39l.821 1.317c.24.383.645.643 1.11.71.386.054.77.113 1.152.177 1.432.239 2.429 1.493 2.429 2.909V18a3 3 0 01-3 3h-15a3 3 0 01-3-3V9.574c0-1.416.997-2.67 2.429-2.909.382-.064.766-.123 1.151-.178a1.56 1.56 0 001.11-.71l.822-1.315a2.942 2.942 0 012.332-1.39zM6.75 12.75a5.25 5.25 0 1110.5 0 5.25 5.25 0 01-10.5 0z" clip-rule="evenodd" />
+						</svg>
+					</div>
 				</div>
+
+				<input bind:this={fileInput} type="file" accept="image/*" class="hidden" onchange={uploadPicture} />
+
 				<div class="text-center">
 					<p class="font-semibold text-gray-900">{user.name || 'Kein Name'}</p>
 					<p class="text-sm text-gray-500">{user.email}</p>
 				</div>
-			</div>
 
-			<!-- Profilbild-Upload (kommt) -->
-			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-				<h2 class="font-semibold text-gray-900 mb-3">Profilbild</h2>
-				<div class="h-10 bg-gray-100 rounded-xl animate-pulse"></div>
+				{#if uploading}
+					<p class="text-sm text-orange-500 flex items-center gap-1">
+						<span class="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin inline-block"></span>
+						Wird hochgeladen…
+					</p>
+				{:else if pictureMsg}
+					<p class="text-sm {pictureMsgOk ? 'text-green-600' : 'text-red-500'}">{pictureMsg}</p>
+				{/if}
+
+				<p class="text-xs text-gray-400">Tippe auf das Bild um es zu ändern</p>
 			</div>
 
 			<!-- Sportarten (kommt) -->
