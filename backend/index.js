@@ -79,6 +79,21 @@ app.get('/sports', async (_req, res) => {
   res.json(await db.all('SELECT * FROM sports ORDER BY name'));
 });
 
+// ─── User / Profil ───────────────────────────────────────────────────────────
+
+app.get('/users/me', auth, async (req, res) => {
+  const db = await getDb();
+  const user = await db.get(
+    'SELECT id, email, name, age, location, latitude, longitude, search_radius, bio, profile_picture, language, onboarding_complete FROM users WHERE id = ?',
+    req.user.id,
+  );
+  const sports = await db.all(
+    'SELECT s.id, s.name FROM sports s JOIN user_sports us ON us.sport_id = s.id WHERE us.user_id = ?',
+    req.user.id,
+  );
+  res.json({ ...user, sports });
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 await createTables();
