@@ -106,6 +106,17 @@ app.put('/users/me', auth, async (req, res) => {
   res.json({ success: true });
 });
 
+app.put('/users/me/sports', auth, async (req, res) => {
+  const { sports } = req.body;
+  if (!Array.isArray(sports)) return res.status(400).json({ error: 'sports must be an array of ids' });
+  const db = await getDb();
+  await db.run('DELETE FROM user_sports WHERE user_id = ?', req.user.id);
+  for (const sportId of sports) {
+    await db.run('INSERT OR IGNORE INTO user_sports (user_id, sport_id) VALUES (?, ?)', req.user.id, sportId);
+  }
+  res.json({ success: true });
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 await createTables();
