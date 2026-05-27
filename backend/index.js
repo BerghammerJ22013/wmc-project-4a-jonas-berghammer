@@ -94,6 +94,18 @@ app.get('/users/me', auth, async (req, res) => {
   res.json({ ...user, sports });
 });
 
+app.put('/users/me', auth, async (req, res) => {
+  const { name, age, location, latitude, longitude, search_radius, bio, language, onboarding_complete } = req.body;
+  const db = await getDb();
+  await db.run(
+    `UPDATE users SET name = ?, age = ?, location = ?, latitude = ?, longitude = ?,
+     search_radius = ?, bio = ?, language = ?, onboarding_complete = ? WHERE id = ?`,
+    name, age, location, latitude, longitude, search_radius, bio, language,
+    onboarding_complete ? 1 : 0, req.user.id,
+  );
+  res.json({ success: true });
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 await createTables();
