@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import multer from 'multer';
 import { getDb } from './database.js';
 import { createTables } from './schema.js';
 import { seed } from './seed.js';
@@ -12,6 +13,7 @@ import { seed } from './seed.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
+const upload = multer({ dest: 'uploads/' });
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
@@ -68,6 +70,13 @@ app.post('/auth/login', async (req, res) => {
 // Stateless JWT – Client löscht Token, Server bestätigt nur
 app.post('/auth/logout', auth, (_req, res) => {
   res.json({ success: true });
+});
+
+// ─── Sports ──────────────────────────────────────────────────────────────────
+
+app.get('/sports', async (_req, res) => {
+  const db = await getDb();
+  res.json(await db.all('SELECT * FROM sports ORDER BY name'));
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
