@@ -30,6 +30,13 @@
 	let dataMsg = $state('');
 	let dataMsgOk = $state(false);
 
+	// settings
+	let searchRadius = $state(50);
+	let language = $state('de');
+	let savingSettings = $state(false);
+	let settingsMsg = $state('');
+	let settingsMsgOk = $state(false);
+
 	// Init form fields once user is available in store
 	$effect(() => {
 		const u = userStore.user;
@@ -39,6 +46,8 @@
 			location = u.location || '';
 			bio = u.bio || '';
 			selectedSports = u.sports?.map((s) => s.id) ?? [];
+			searchRadius = u.search_radius ?? 50;
+			language = u.language ?? 'de';
 			if (u.profile_picture) pictureUrl = `${API}/uploads/${u.profile_picture}`;
 			formInitialized = true;
 		}
@@ -151,13 +160,13 @@
 					bio: bio || null,
 					latitude: u?.latitude,
 					longitude: u?.longitude,
-					search_radius: u?.search_radius,
-					language: u?.language,
+					search_radius: searchRadius,
+					language,
 					onboarding_complete: u?.onboarding_complete,
 				}),
 			});
 			if (res.ok) {
-				userStore.update({ name, age: age !== '' ? Number(age) : null, location, bio });
+				userStore.update({ name, age: age !== '' ? Number(age) : null, location, bio, search_radius: searchRadius, language });
 				dataMsg = 'Daten gespeichert!';
 				dataMsgOk = true;
 			} else {
@@ -170,6 +179,47 @@
 			dataMsgOk = false;
 		} finally {
 			savingData = false;
+		}
+	}
+
+	async function saveSettings() {
+		savingSettings = true;
+		settingsMsg = '';
+
+		try {
+			const u = userStore.user;
+			const res = await fetch(`${API}/users/me`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${getToken()}`,
+				},
+				body: JSON.stringify({
+					name: u?.name,
+					age: u?.age,
+					location: u?.location,
+					bio: u?.bio,
+					latitude: u?.latitude,
+					longitude: u?.longitude,
+					search_radius: searchRadius,
+					language,
+					onboarding_complete: u?.onboarding_complete,
+				}),
+			});
+			if (res.ok) {
+				userStore.update({ search_radius: searchRadius, language });
+				settingsMsg = 'Einstellungen gespeichert!';
+				settingsMsgOk = true;
+			} else {
+				const data = await res.json();
+				settingsMsg = data.error || 'Fehler beim Speichern';
+				settingsMsgOk = false;
+			}
+		} catch {
+			settingsMsg = 'Verbindungsfehler';
+			settingsMsgOk = false;
+		} finally {
+			savingSettings = false;
 		}
 	}
 </script>
@@ -339,6 +389,61 @@
 
 				{#if dataMsg}
 					<p class="text-xs mt-2 text-right {dataMsgOk ? 'text-green-600' : 'text-red-500'}">{dataMsg}</p>
+				{/if}
+			</div>
+
+			<!-- Einstellungen -->
+			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+				<h2 class="font-semibold text-gray-900 mb-4">Einstellungen</h2>
+
+				<div class="space-y-5">
+					<!-- Suchradius -->
+					<div>
+						<div class="flex justify-between items-center mb-2">
+							<label class="text-xs font-medium text-gray-500" for="radius">Suchradius</label>
+							<span class="text-sm font-semibold text-orange-500">{searchRadius} km</span>
+						</div>
+						<input
+							id="radius"
+							type="range"
+							bind:value={searchRadius}
+							min="5"
+							max="200"
+							step="5"
+							class="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-orange-500"
+						/>
+						<div class="flex justify-between text-xs text-gray-400 mt-1">
+							<span>5 km</span>
+							<span>200 km</span>
+						</div>
+					</div>
+
+					<!-- Sprache -->
+					<div>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="language">Sprache</label>
+						<select
+							id="language"
+							bind:value={language}
+							class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-white"
+						>
+							<option value="de">🇦🇹 Deutsch</option>
+							<option value="en">🇬🇧 English</option>
+						</select>
+					</div>
+				</div>
+
+				<div class="flex items-center justify-end mt-4">
+					<button
+						onclick={saveSettings}
+						disabled={savingSettings}
+						class="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+					>
+						{savingSettings ? 'Speichern…' : 'Speichern'}
+					</button>
+				</div>
+
+				{#if settingsMsg}
+					<p class="text-xs mt-2 text-right {settingsMsgOk ? 'text-green-600' : 'text-red-500'}">{settingsMsg}</p>
 				{/if}
 			</div>
 
