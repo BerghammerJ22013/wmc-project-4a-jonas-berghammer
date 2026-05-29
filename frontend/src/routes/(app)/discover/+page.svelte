@@ -38,14 +38,6 @@
 </script>
 
 <div class="h-[calc(100vh-4rem)] bg-gray-50 overflow-hidden flex flex-col">
-	<!-- Header -->
-	<div class="bg-white border-b border-gray-100 px-4 pt-10 pb-3 text-center shrink-0">
-		<h1 class="text-xl font-bold text-gray-900">Entdecken</h1>
-		{#if !loading && !error}
-			<p class="text-xs text-gray-400 mt-0.5">{users.length} {users.length === 1 ? 'Person' : 'Personen'} in deiner Nähe</p>
-		{/if}
-	</div>
-
 	<div class="flex-1 flex items-center justify-center px-4 py-4 overflow-hidden">
 		{#if loading}
 			<div class="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
