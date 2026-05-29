@@ -225,11 +225,6 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
-	<!-- Header -->
-	<div class="bg-white border-b border-gray-100 px-4 pt-12 pb-6 text-center">
-		<h1 class="text-xl font-bold text-gray-900">Mein Profil</h1>
-	</div>
-
 	{#if userStore.loading || !userStore.user}
 		<div class="flex justify-center items-center py-24">
 			<div class="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
