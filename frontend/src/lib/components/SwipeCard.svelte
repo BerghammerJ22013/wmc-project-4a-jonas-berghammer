@@ -6,7 +6,7 @@
 
 <div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden w-full max-w-sm mx-auto">
 	<!-- Profile picture -->
-	<div class="relative h-56 bg-gray-100">
+	<div class="relative h-110 bg-gray-100">
 		{#if user.profile_picture}
 			<img
 				src="{API}/uploads/{user.profile_picture}"

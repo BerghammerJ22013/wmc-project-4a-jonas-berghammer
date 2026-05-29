@@ -1,72 +1,57 @@
 <script>
+	import { onMount } from 'svelte';
 	import SwipeCard from '$lib/components/SwipeCard.svelte';
+	import { getToken, API } from '$lib/auth.js';
 
-	const DUMMY_USERS = [
-		{
-			id: 1,
-			name: 'Anna Mayer',
-			age: 24,
-			location: 'Linz',
-			bio: 'Laufe gerne morgens und klettere am Wochenende.',
-			profile_picture: null,
-			sports: [{ name: 'Laufen' }, { name: 'Klettern' }, { name: 'Yoga' }],
-		},
-		{
-			id: 2,
-			name: 'Max Huber',
-			age: 27,
-			location: 'Wels',
-			bio: 'Fussball ist meine Leidenschaft, suche Mitspieler.',
-			profile_picture: null,
-			sports: [{ name: 'Fussball' }, { name: 'Laufen' }, { name: 'Radfahren' }],
-		},
-		{
-			id: 3,
-			name: 'Sara Gruber',
-			age: 22,
-			location: 'Grieskirchen',
-			bio: 'Yoga-Liebhaberin und gelegentliche Schwimmerin.',
-			profile_picture: null,
-			sports: [{ name: 'Yoga' }, { name: 'Schwimmen' }, { name: 'Wandern' }],
-		},
-		{
-			id: 4,
-			name: 'Luca Bauer',
-			age: 26,
-			location: 'Steyr',
-			bio: 'Basketball und Tennis - immer auf der Suche nach Sparring.',
-			profile_picture: null,
-			sports: [{ name: 'Basketball' }, { name: 'Tennis' }, { name: 'Volleyball' }],
-		},
-		{
-			id: 5,
-			name: 'Mia Schmidt',
-			age: 23,
-			location: 'Linz',
-			bio: 'Radfahren und Wandern in der Natur.',
-			profile_picture: null,
-			sports: [{ name: 'Radfahren' }, { name: 'Wandern' }, { name: 'Laufen' }],
-		},
-	];
+	let users = $state([]);
+	let loading = $state(true);
+	let error = $state('');
 
-	let users = $state([...DUMMY_USERS]);
 	let current = $derived(users[0] ?? null);
 
-	function swipe(direction) {
+	onMount(async () => {
+		try {
+			const res = await fetch(`${API}/discover`, {
+				headers: { Authorization: `Bearer ${getToken()}` },
+			});
+			if (!res.ok) throw new Error();
+			users = await res.json();
+		} catch {
+			error = 'Profile konnten nicht geladen werden.';
+		} finally {
+			loading = false;
+		}
+	});
+
+	async function swipe(direction) {
+		const swiped = current;
 		users = users.slice(1);
+		await fetch(`${API}/swipes`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${getToken()}`,
+			},
+			body: JSON.stringify({ swiped_id: swiped.id, direction }),
+		});
 	}
 </script>
 
 <div class="h-[calc(100vh-4rem)] bg-gray-50 overflow-hidden flex flex-col">
 	<div class="flex-1 flex items-center justify-center px-4 py-4 overflow-hidden">
-		{#if current}
+		{#if loading}
+			<div class="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+		{:else if error}
+			<div class="text-center">
+				<p class="text-sm text-red-500">{error}</p>
+			</div>
+		{:else if current}
 			<SwipeCard
 				user={current}
 				onlike={() => swipe('like')}
 				onpass={() => swipe('pass')}
 			/>
 		{:else}
-			<!-- Empty state -->
 			<div class="flex flex-col items-center justify-center text-center">
 				<div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-4">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10 text-orange-300">

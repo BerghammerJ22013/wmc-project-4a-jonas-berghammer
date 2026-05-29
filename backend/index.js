@@ -124,6 +124,79 @@ app.post('/users/me/picture', auth, upload.single('picture'), async (req, res) =
   res.json({ filename: req.file.filename });
 });
 
+// ─── Discover ────────────────────────────────────────────────────────────────
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+app.get('/discover', auth, async (req, res) => {
+  const db = await getDb();
+
+  const me = await db.get(
+    'SELECT latitude, longitude, search_radius FROM users WHERE id = ?',
+    req.user.id,
+  );
+  const mySports = await db.all(
+    'SELECT sport_id FROM user_sports WHERE user_id = ?',
+    req.user.id,
+  );
+  const mySportIds = new Set(mySports.map((s) => s.sport_id));
+
+  const candidates = await db.all(
+    `SELECT id, name, age, location, bio, profile_picture, latitude, longitude
+     FROM users
+     WHERE id != ?
+       AND id NOT IN (SELECT swiped_id FROM swipes WHERE swiper_id = ?)`,
+    req.user.id, req.user.id,
+  );
+
+  const results = [];
+  for (const u of candidates) {
+    // radius filter — skip if either has no location
+    if (me.latitude && me.longitude && u.latitude && u.longitude) {
+      const dist = haversineKm(me.latitude, me.longitude, u.latitude, u.longitude);
+      if (dist > (me.search_radius ?? 50)) continue;
+    }
+
+    // sports filter — skip if no overlap (only when current user has sports set)
+    if (mySportIds.size > 0) {
+      const theirSports = await db.all(
+        'SELECT sport_id FROM user_sports WHERE user_id = ?',
+        u.id,
+      );
+      const overlap = theirSports.some((s) => mySportIds.has(s.sport_id));
+      if (!overlap) continue;
+    }
+
+    const sports = await db.all(
+      'SELECT s.name FROM sports s JOIN user_sports us ON us.sport_id = s.id WHERE us.user_id = ?',
+      u.id,
+    );
+    results.push({ ...u, sports });
+  }
+
+  res.json(results);
+});
+
+app.post('/swipes', auth, async (req, res) => {
+  const { swiped_id, direction } = req.body;
+  if (!swiped_id || !['like', 'pass'].includes(direction)) {
+    return res.status(400).json({ error: 'swiped_id and direction (like/pass) required' });
+  }
+  const db = await getDb();
+  await db.run(
+    'INSERT OR IGNORE INTO swipes (swiper_id, swiped_id, direction) VALUES (?, ?, ?)',
+    req.user.id, swiped_id, direction,
+  );
+  res.json({ success: true });
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 await createTables();
