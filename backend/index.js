@@ -194,7 +194,23 @@ app.post('/swipes', auth, async (req, res) => {
     'INSERT OR IGNORE INTO swipes (swiper_id, swiped_id, direction) VALUES (?, ?, ?)',
     req.user.id, swiped_id, direction,
   );
-  res.json({ success: true });
+
+  let matched = false;
+  if (direction === 'like') {
+    const mutual = await db.get(
+      'SELECT id FROM swipes WHERE swiper_id = ? AND swiped_id = ? AND direction = ?',
+      swiped_id, req.user.id, 'like',
+    );
+    if (mutual) {
+      await db.run(
+        'INSERT OR IGNORE INTO matches (user1_id, user2_id) VALUES (?, ?)',
+        Math.min(req.user.id, swiped_id), Math.max(req.user.id, swiped_id),
+      );
+      matched = true;
+    }
+  }
+
+  res.json({ success: true, matched });
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
