@@ -158,10 +158,13 @@ app.get('/discover', auth, async (req, res) => {
 
   const results = [];
   for (const u of candidates) {
+    let distance_km = null;
+
     // radius filter — skip if either has no location
     if (me.latitude && me.longitude && u.latitude && u.longitude) {
       const dist = haversineKm(me.latitude, me.longitude, u.latitude, u.longitude);
       if (dist > (me.search_radius ?? 50)) continue;
+      distance_km = Math.round(dist);
     }
 
     // sports filter — skip if no overlap (only when current user has sports set)
@@ -178,7 +181,7 @@ app.get('/discover', auth, async (req, res) => {
       'SELECT s.name FROM sports s JOIN user_sports us ON us.sport_id = s.id WHERE us.user_id = ?',
       u.id,
     );
-    results.push({ ...u, sports });
+    results.push({ ...u, sports, distance_km });
   }
 
   res.json(results);
