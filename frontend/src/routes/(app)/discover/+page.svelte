@@ -42,7 +42,7 @@
 </script>
 
 <div class="h-[calc(100vh-4rem)] bg-gray-50 overflow-hidden flex flex-col">
-	<div class="flex-1 flex justify-center p-2 sm:p-4 overflow-hidden">
+	<div class="flex-1 flex justify-center px-4 py-6 sm:px-6 sm:py-8 overflow-hidden">
 		{#if loading}
 			<div class="flex-1 flex items-center justify-center">
 				<div class="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>

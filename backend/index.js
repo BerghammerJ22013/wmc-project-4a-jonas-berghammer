@@ -174,14 +174,16 @@ app.get('/discover', auth, async (req, res) => {
       distance_km = Math.round(dist);
     }
 
-    // sports filter — skip if no overlap (only when current user has sports set)
+    // sports filter — only apply if both users have sports set
     if (mySportIds.size > 0) {
       const theirSports = await db.all(
         'SELECT sport_id FROM user_sports WHERE user_id = ?',
         u.id,
       );
-      const overlap = theirSports.some((s) => mySportIds.has(s.sport_id));
-      if (!overlap) continue;
+      if (theirSports.length > 0) {
+        const overlap = theirSports.some((s) => mySportIds.has(s.sport_id));
+        if (!overlap) continue;
+      }
     }
 
     const sports = await db.all(
