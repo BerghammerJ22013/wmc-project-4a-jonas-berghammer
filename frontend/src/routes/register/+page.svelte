@@ -76,7 +76,7 @@
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center p-4">
-	<div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
+	<div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
 
 		<div class="text-center mb-8">
 			<div class="text-4xl mb-2">🏃</div>
@@ -98,7 +98,7 @@
 					type="email"
 					bind:value={email}
 					placeholder="name@beispiel.at"
-					class="w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition
+					class="w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition bg-white
 						{errors.email ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-300' : 'border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200'}"
 				/>
 				{#if errors.email}
@@ -113,7 +113,7 @@
 					type="password"
 					bind:value={password}
 					placeholder="••••••••"
-					class="w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition
+					class="w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition bg-white
 						{errors.password ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-300' : 'border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200'}"
 				/>
 				{#if password && !errors.password}
@@ -134,7 +134,7 @@
 					type="password"
 					bind:value={passwordConfirm}
 					placeholder="••••••••"
-					class="w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition
+					class="w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition bg-white
 						{errors.passwordConfirm ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-300' : 'border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200'}"
 				/>
 				{#if errors.passwordConfirm}

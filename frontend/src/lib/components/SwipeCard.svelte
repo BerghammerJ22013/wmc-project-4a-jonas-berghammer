@@ -5,9 +5,9 @@
 	let { user, onlike, onpass } = $props();
 </script>
 
-<div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden w-full max-w-sm mx-auto">
-	<!-- Profile picture -->
-	<div class="relative h-110 bg-gray-100">
+<div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden w-full h-full flex flex-col">
+	<!-- Profile picture — grows to fill available height -->
+	<div class="relative flex-1 min-h-0 bg-gray-100">
 		{#if user.profile_picture}
 			<img
 				src="{API}/uploads/{user.profile_picture}"
@@ -39,8 +39,7 @@
 	</div>
 
 	<!-- Card body -->
-	<div class="px-5 py-4 space-y-3">
-		<!-- Sports -->
+	<div class="shrink-0 px-5 py-3 space-y-2">
 		{#if user.sports?.length}
 			<div class="flex flex-wrap gap-1.5">
 				{#each user.sports as sport}
@@ -51,14 +50,13 @@
 			</div>
 		{/if}
 
-		<!-- Bio -->
 		{#if user.bio}
-			<p class="text-sm text-gray-600 leading-relaxed line-clamp-3">{user.bio}</p>
+			<p class="text-sm text-gray-600 leading-relaxed line-clamp-2">{user.bio}</p>
 		{/if}
 	</div>
 
 	<!-- Buttons -->
-	<div class="flex gap-3 px-5 pb-5">
+	<div class="shrink-0 flex gap-3 px-5 pb-5 pt-1">
 		<button
 			onclick={onpass}
 			class="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-gray-200 text-gray-500 font-semibold hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
