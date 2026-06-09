@@ -11,6 +11,9 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "optionalDependencies": {
+    "picomatch": "^4.0.4"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
