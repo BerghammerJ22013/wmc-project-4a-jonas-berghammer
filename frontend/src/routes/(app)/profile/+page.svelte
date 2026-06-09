@@ -239,7 +239,7 @@
 		</div>
 	{:else}
 		{@const u = userStore.user}
-		<div class="max-w-lg mx-auto px-4 py-6 space-y-4">
+		<div class="px-4 py-6 space-y-4 sm:max-w-lg sm:mx-auto">
 
 			<!-- Avatar + Name -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col items-center gap-3">

@@ -8,15 +8,18 @@
 	import { userStore } from '$lib/userStore.svelte.js';
 
 	let chats = $state([]);
+	let likes = $state([]);
 	let loading = $state(true);
 	let selectedChat = $state(null);
 
 	onMount(async () => {
 		try {
-			const res = await fetch(`${API}/matches`, {
-				headers: { Authorization: `Bearer ${getToken()}` },
-			});
-			chats = await res.json();
+			const [matchesRes, likesRes] = await Promise.all([
+				fetch(`${API}/matches`, { headers: { Authorization: `Bearer ${getToken()}` } }),
+				fetch(`${API}/likes/received`, { headers: { Authorization: `Bearer ${getToken()}` } }),
+			]);
+			chats = await matchesRes.json();
+			likes = await likesRes.json();
 		} finally {
 			loading = false;
 		}
@@ -58,6 +61,7 @@
 		{:else}
 			<ChatList
 				{chats}
+				{likes}
 				selectedId={selectedChat?.id}
 				onselect={(chat) => (selectedChat = chat)}
 			/>
