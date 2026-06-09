@@ -219,6 +219,8 @@ app.post('/swipes', auth, async (req, res) => {
         Math.min(req.user.id, swiped_id), Math.max(req.user.id, swiped_id),
       );
       matched = true;
+      const me = await db.get('SELECT id, name, profile_picture, location FROM users WHERE id = ?', req.user.id);
+      io.to(`user:${swiped_id}`).emit('match', me);
     }
   }
 
@@ -314,6 +316,8 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
+  socket.join(`user:${socket.user.id}`);
+
   socket.on('join_match', async (matchId) => {
     const db = await getDb();
     const match = await db.get(

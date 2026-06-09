@@ -3,6 +3,7 @@
 	import { _ } from 'svelte-i18n';
 	import ChatList from '$lib/components/ChatList.svelte';
 	import ChatView from '$lib/components/ChatView.svelte';
+	import MatchModal from '$lib/components/MatchModal.svelte';
 	import { API, getToken } from '$lib/auth.js';
 	import { socketStore } from '$lib/socketStore.svelte.js';
 	import { userStore } from '$lib/userStore.svelte.js';
@@ -11,6 +12,7 @@
 	let likes = $state([]);
 	let loading = $state(true);
 	let selectedChat = $state(null);
+	let matchedUser = $state(null);
 
 	onMount(async () => {
 		try {
@@ -28,6 +30,21 @@
 	});
 
 	onDestroy(() => socketStore.off('new_message', handleNewMessage));
+
+	async function likeback(liker) {
+		likes = likes.filter((l) => l.id !== liker.id);
+		const res = await fetch(`${API}/swipes`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+			body: JSON.stringify({ swiped_id: liker.id, direction: 'like' }),
+		});
+		const data = await res.json();
+		if (data.matched) {
+			matchedUser = liker;
+			const matchesRes = await fetch(`${API}/matches`, { headers: { Authorization: `Bearer ${getToken()}` } });
+			chats = await matchesRes.json();
+		}
+	}
 
 	function handleNewMessage(msg) {
 		chats = chats.map((c) => {
@@ -64,6 +81,7 @@
 				{likes}
 				selectedId={selectedChat?.id}
 				onselect={(chat) => (selectedChat = chat)}
+				onlike={likeback}
 			/>
 		{/if}
 	</div>
@@ -92,3 +110,5 @@
 		{/if}
 	</div>
 </div>
+
+<MatchModal user={matchedUser} onclose={() => (matchedUser = null)} />

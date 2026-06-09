@@ -2,7 +2,7 @@
 	import { _ } from 'svelte-i18n';
 	import { API } from '$lib/auth.js';
 
-	let { chats, likes = [], selectedId, onselect } = $props();
+	let { chats, likes = [], selectedId, onselect, onlike } = $props();
 
 	function formatTime(dateStr) {
 		if (!dateStr) return '';
@@ -23,7 +23,7 @@
 			<p class="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-3">{$_('chats.likes')}</p>
 			<div class="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
 				{#each likes as liker (liker.id)}
-					<div class="flex flex-col items-center gap-1 shrink-0">
+					<button onclick={() => onlike?.(liker)} class="flex flex-col items-center gap-1 shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
 						<div class="relative">
 							<div class="w-14 h-14 rounded-full bg-orange-100 overflow-hidden ring-2 ring-orange-400">
 								{#if liker.profile_picture}
@@ -43,7 +43,7 @@
 							</div>
 						</div>
 						<span class="text-xs text-gray-600 font-medium max-w-[3.5rem] truncate text-center">{liker.name ?? '?'}</span>
-					</div>
+					</button>
 				{/each}
 			</div>
 		</div>

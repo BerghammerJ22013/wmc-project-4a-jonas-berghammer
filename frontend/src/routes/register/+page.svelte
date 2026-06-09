@@ -66,7 +66,7 @@
 
 			setToken(data.token);
 			await userStore.load();
-			goto('/discover');
+			goto('/profile');
 		} catch {
 			errors.general = t('register.errors.serverUnreachable');
 		} finally {
