@@ -1,4 +1,6 @@
-export const API = 'http://localhost:3000';
+import { PUBLIC_API_URL } from '$env/static/public';
+
+export const API = PUBLIC_API_URL || 'http://localhost:3000';
 
 export function getToken() {
   return localStorage.getItem('token');

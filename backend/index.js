@@ -18,13 +18,15 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
 const upload = multer({ dest: 'uploads/' });
 
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
+
 const io = new Server(httpServer, {
-  cors: { origin: '*' },
+  cors: { origin: ALLOWED_ORIGIN },
 });
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
-app.use(cors());
+app.use(cors({ origin: ALLOWED_ORIGIN }));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
