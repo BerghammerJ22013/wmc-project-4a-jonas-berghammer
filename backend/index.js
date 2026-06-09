@@ -1,19 +1,26 @@
 'use strict';
 
 import 'dotenv/config';
+import { createServer } from 'http';
 import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
+import { Server } from 'socket.io';
 import { getDb } from './database.js';
 import { createTables } from './schema.js';
 import { seed } from './seed.js';
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
 const upload = multer({ dest: 'uploads/' });
+
+const io = new Server(httpServer, {
+  cors: { origin: '*' },
+});
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
@@ -272,7 +279,30 @@ app.post('/matches/:id/messages', auth, async (req, res) => {
     req.params.id, req.user.id, content.trim(),
   );
   const msg = await db.get('SELECT id, sender_id, content, is_read, created_at FROM messages WHERE id = ?', lastID);
+  io.to(`match:${req.params.id}`).emit('new_message', msg);
   res.status(201).json(msg);
+});
+
+// ─── Socket.io ───────────────────────────────────────────────────────────────
+
+io.use((socket, next) => {
+  try {
+    socket.user = jwt.verify(socket.handshake.auth.token, JWT_SECRET);
+    next();
+  } catch {
+    next(new Error('Unauthorized'));
+  }
+});
+
+io.on('connection', (socket) => {
+  socket.on('join_match', async (matchId) => {
+    const db = await getDb();
+    const match = await db.get(
+      'SELECT id FROM matches WHERE id = ? AND (user1_id = ? OR user2_id = ?)',
+      matchId, socket.user.id, socket.user.id,
+    );
+    if (match) socket.join(`match:${matchId}`);
+  });
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
@@ -280,4 +310,4 @@ app.post('/matches/:id/messages', auth, async (req, res) => {
 await createTables();
 await seed();
 
-app.listen(PORT, () => console.log(`SportSync API running on http://localhost:${PORT}`));
+httpServer.listen(PORT, () => console.log(`SportSync API running on http://localhost:${PORT}`));

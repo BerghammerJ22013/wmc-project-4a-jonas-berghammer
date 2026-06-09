@@ -1,5 +1,6 @@
 <script>
-	import { onMount, tick } from 'svelte';
+	import { tick } from 'svelte';
+	import { io } from 'socket.io-client';
 	import { API, getToken } from '$lib/auth.js';
 	import { userStore } from '$lib/userStore.svelte.js';
 
@@ -11,10 +12,14 @@
 	let sending = $state(false);
 	let messagesEl = $state(null);
 
-	async function loadMessages() {
+	function scrollToBottom() {
+		if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
+	}
+
+	async function loadMessages(matchId) {
 		loading = true;
 		try {
-			const res = await fetch(`${API}/matches/${chat.id}/messages`, {
+			const res = await fetch(`${API}/matches/${matchId}/messages`, {
 				headers: { Authorization: `Bearer ${getToken()}` },
 			});
 			messages = await res.json();
@@ -25,17 +30,13 @@
 		}
 	}
 
-	function scrollToBottom() {
-		if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
-	}
-
 	async function send() {
 		const text = input.trim();
 		if (!text || sending) return;
 		sending = true;
 		input = '';
 		try {
-			const res = await fetch(`${API}/matches/${chat.id}/messages`, {
+			await fetch(`${API}/matches/${chat.id}/messages`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -43,10 +44,7 @@
 				},
 				body: JSON.stringify({ content: text }),
 			});
-			const msg = await res.json();
-			messages = [...messages, msg];
-			await tick();
-			scrollToBottom();
+			// message arrives via socket broadcast — no local push needed
 		} finally {
 			sending = false;
 		}
@@ -64,7 +62,23 @@
 	}
 
 	$effect(() => {
-		if (chat?.id) loadMessages();
+		const matchId = chat?.id;
+		if (!matchId) return;
+
+		messages = [];
+		loadMessages(matchId);
+
+		const socket = io(API, { auth: { token: getToken() } });
+
+		socket.emit('join_match', matchId);
+
+		socket.on('new_message', async (msg) => {
+			messages = [...messages, msg];
+			await tick();
+			scrollToBottom();
+		});
+
+		return () => socket.disconnect();
 	});
 </script>
 
