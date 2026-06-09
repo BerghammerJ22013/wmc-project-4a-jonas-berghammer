@@ -216,6 +216,65 @@ app.post('/swipes', auth, async (req, res) => {
   res.json({ success: true, matched });
 });
 
+// ─── Chats / Matches ─────────────────────────────────────────────────────────
+
+app.get('/matches', auth, async (req, res) => {
+  const db = await getDb();
+  const rows = await db.all(
+    `SELECT m.id, m.created_at,
+            u.id AS partner_id, u.name, u.profile_picture, u.location,
+            (SELECT content    FROM messages WHERE match_id = m.id ORDER BY created_at DESC LIMIT 1) AS last_content,
+            (SELECT sender_id  FROM messages WHERE match_id = m.id ORDER BY created_at DESC LIMIT 1) AS last_sender_id,
+            (SELECT created_at FROM messages WHERE match_id = m.id ORDER BY created_at DESC LIMIT 1) AS last_at,
+            (SELECT COUNT(*)   FROM messages WHERE match_id = m.id AND sender_id != ? AND is_read = 0) AS unread
+     FROM matches m
+     JOIN users u ON u.id = CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END
+     WHERE m.user1_id = ? OR m.user2_id = ?
+     ORDER BY COALESCE(last_at, m.created_at) DESC`,
+    req.user.id, req.user.id, req.user.id, req.user.id,
+  );
+  res.json(rows);
+});
+
+app.get('/matches/:id/messages', auth, async (req, res) => {
+  const db = await getDb();
+  const match = await db.get(
+    'SELECT id FROM matches WHERE id = ? AND (user1_id = ? OR user2_id = ?)',
+    req.params.id, req.user.id, req.user.id,
+  );
+  if (!match) return res.status(404).json({ error: 'Match not found' });
+
+  await db.run(
+    'UPDATE messages SET is_read = 1 WHERE match_id = ? AND sender_id != ?',
+    req.params.id, req.user.id,
+  );
+
+  const messages = await db.all(
+    'SELECT id, sender_id, content, is_read, created_at FROM messages WHERE match_id = ? ORDER BY created_at ASC',
+    req.params.id,
+  );
+  res.json(messages);
+});
+
+app.post('/matches/:id/messages', auth, async (req, res) => {
+  const { content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: 'content required' });
+
+  const db = await getDb();
+  const match = await db.get(
+    'SELECT id FROM matches WHERE id = ? AND (user1_id = ? OR user2_id = ?)',
+    req.params.id, req.user.id, req.user.id,
+  );
+  if (!match) return res.status(404).json({ error: 'Match not found' });
+
+  const { lastID } = await db.run(
+    'INSERT INTO messages (match_id, sender_id, content) VALUES (?, ?, ?)',
+    req.params.id, req.user.id, content.trim(),
+  );
+  const msg = await db.get('SELECT id, sender_id, content, is_read, created_at FROM messages WHERE id = ?', lastID);
+  res.status(201).json(msg);
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 await createTables();
