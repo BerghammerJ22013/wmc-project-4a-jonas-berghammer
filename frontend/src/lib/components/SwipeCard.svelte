@@ -1,4 +1,5 @@
 <script>
+	import { _ } from 'svelte-i18n';
 	import { API } from '$lib/auth.js';
 
 	let { user, onlike, onpass } = $props();
@@ -24,7 +25,7 @@
 		<!-- Name + age overlay -->
 		<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-5 pb-4 pt-10">
 			<h2 class="text-white text-xl font-bold leading-tight">
-				{user.name || 'Unbekannt'}{user.age ? `, ${user.age}` : ''}
+				{user.name || $_('card.unknown')}{user.age ? `, ${user.age}` : ''}
 			</h2>
 			{#if user.location}
 				<p class="text-white/80 text-sm flex items-center gap-1 mt-0.5">
@@ -65,7 +66,7 @@
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
 				<path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clip-rule="evenodd" />
 			</svg>
-			Pass
+			{$_('card.pass')}
 		</button>
 
 		<button
@@ -75,7 +76,7 @@
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
 				<path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
 			</svg>
-			Like
+			{$_('card.like')}
 		</button>
 	</div>
 </div>

@@ -1,0 +1,108 @@
+{
+  "login": {
+    "subtitle": "Find your sport buddy",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "noAccount": "No account yet?",
+    "registerLink": "Register",
+    "errors": {
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Invalid email address.",
+      "passwordRequired": "Password is required.",
+      "failed": "Login failed.",
+      "serverUnreachable": "Server unreachable."
+    }
+  },
+  "register": {
+    "subtitle": "Create your account",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "submit": "Register",
+    "submitting": "Registering…",
+    "hasAccount": "Already have an account?",
+    "loginLink": "Sign in",
+    "strength": {
+      "weak": "weak",
+      "medium": "medium",
+      "strong": "strong"
+    },
+    "errors": {
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Invalid email address.",
+      "passwordRequired": "Password is required.",
+      "passwordWeak": "Min. 8 characters, 1 uppercase and 1 number.",
+      "confirmRequired": "Please confirm your password.",
+      "confirmMismatch": "Passwords do not match.",
+      "failed": "Registration failed.",
+      "serverUnreachable": "Server unreachable."
+    }
+  },
+  "nav": {
+    "discover": "Discover",
+    "chats": "Chats",
+    "profile": "Profile",
+    "logout": "Sign out"
+  },
+  "discover": {
+    "noProfiles": "No more profiles",
+    "noProfilesHint": "Check back later or expand your search radius in settings."
+  },
+  "card": {
+    "like": "Like",
+    "pass": "Pass",
+    "unknown": "Unknown"
+  },
+  "match": {
+    "title": "It's a Match!",
+    "subtitle": "You and {name} liked each other.",
+    "sendMessage": "Send message",
+    "keepDiscovering": "Keep discovering"
+  },
+  "chats": {
+    "title": "Chats",
+    "noMatches": "No matches yet",
+    "noMatchesHint": "Swipe and find your sport partner!",
+    "matched": "You matched 🎉",
+    "selectChat": "Select a chat",
+    "selectChatHint": "Choose a match on the left to start the conversation."
+  },
+  "chat": {
+    "noMessages": "You matched!",
+    "writeFirst": "Write the first message.",
+    "placeholder": "Message...",
+    "back": "Back",
+    "unknown": "Unknown"
+  },
+  "profile": {
+    "noName": "No name",
+    "changePicture": "Tap the image to change it",
+    "uploading": "Uploading…",
+    "pictureSaved": "Profile picture saved!",
+    "sports": {
+      "title": "My sports",
+      "hint": "Choose all sports you do",
+      "selected": "{count} selected"
+    },
+    "personalData": "Personal data",
+    "name": "Name",
+    "age": "Age",
+    "location": "Location",
+    "bio": "About me",
+    "bioPlaceholder": "Tell something about yourself and your sport…",
+    "settings": "Settings",
+    "searchRadius": "Search radius",
+    "language": "Language",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved!",
+    "errors": {
+      "uploadFailed": "Upload error",
+      "saveFailed": "Error saving",
+      "loadFailed": "Could not load sports",
+      "connectionError": "Connection error"
+    }
+  }
+}

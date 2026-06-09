@@ -5,6 +5,7 @@
 	import { isLoggedIn } from '$lib/auth.js';
 	import { userStore } from '$lib/userStore.svelte.js';
 	import { socketStore } from '$lib/socketStore.svelte.js';
+	import { locale } from '$lib/i18n.js';
 	import Navbar from '$lib/components/Navbar.svelte';
 
 	let { children } = $props();
@@ -14,6 +15,10 @@
 	onMount(async () => {
 		if (isLoggedIn() && !userStore.user) {
 			await userStore.load();
+		}
+		if (userStore.user?.language) {
+			locale.set(userStore.user.language);
+			localStorage.setItem('sportsync_lang', userStore.user.language);
 		}
 		if (isLoggedIn()) socketStore.connect();
 	});

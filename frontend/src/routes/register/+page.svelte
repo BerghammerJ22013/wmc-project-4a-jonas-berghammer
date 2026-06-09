@@ -1,7 +1,9 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { _ } from 'svelte-i18n';
 	import { setToken } from '$lib/auth.js';
 	import { userStore } from '$lib/userStore.svelte.js';
+	import { t } from '$lib/i18n.js';
 
 	let email = $state('');
 	let password = $state('');
@@ -19,25 +21,24 @@
 
 	function passwordStrength(val) {
 		if (!val) return null;
-		if (val.length < 6) return 'schwach';
-		if (validatePassword(val)) return 'stark';
-		return 'mittel';
+		if (val.length < 6) return 'weak';
+		if (validatePassword(val)) return 'strong';
+		return 'medium';
 	}
 
 	let strength = $derived(passwordStrength(password));
 
-	const strengthColor = { schwach: 'bg-red-400', mittel: 'bg-yellow-400', stark: 'bg-green-500' };
-	const strengthWidth = { schwach: 'w-1/3', mittel: 'w-2/3', stark: 'w-full' };
+	const strengthColor = { weak: 'bg-red-400', medium: 'bg-yellow-400', strong: 'bg-green-500' };
+	const strengthWidth = { weak: 'w-1/3', medium: 'w-2/3', strong: 'w-full' };
 
 	function validate() {
 		const e = { email: '', password: '', passwordConfirm: '', general: '' };
-		if (!email) e.email = 'E-Mail ist erforderlich.';
-		else if (!validateEmail(email)) e.email = 'Ungültige E-Mail-Adresse.';
-		if (!password) e.password = 'Passwort ist erforderlich.';
-		else if (!validatePassword(password))
-			e.password = 'Min. 8 Zeichen, 1 Großbuchstabe und 1 Zahl.';
-		if (!passwordConfirm) e.passwordConfirm = 'Bitte Passwort bestätigen.';
-		else if (password !== passwordConfirm) e.passwordConfirm = 'Passwörter stimmen nicht überein.';
+		if (!email) e.email = t('register.errors.emailRequired');
+		else if (!validateEmail(email)) e.email = t('register.errors.emailInvalid');
+		if (!password) e.password = t('register.errors.passwordRequired');
+		else if (!validatePassword(password)) e.password = t('register.errors.passwordWeak');
+		if (!passwordConfirm) e.passwordConfirm = t('register.errors.confirmRequired');
+		else if (password !== passwordConfirm) e.passwordConfirm = t('register.errors.confirmMismatch');
 		errors = e;
 		return !e.email && !e.password && !e.passwordConfirm;
 	}
@@ -59,15 +60,15 @@
 			const data = await res.json();
 
 			if (!res.ok) {
-				errors.general = data.error ?? 'Registrierung fehlgeschlagen.';
+				errors.general = data.error ?? t('register.errors.failed');
 				return;
 			}
 
 			setToken(data.token);
-				await userStore.load();
-				goto('/discover');
+			await userStore.load();
+			goto('/discover');
 		} catch {
-			errors.general = 'Server nicht erreichbar.';
+			errors.general = t('register.errors.serverUnreachable');
 		} finally {
 			loading = false;
 		}
@@ -80,7 +81,7 @@
 		<div class="text-center mb-8">
 			<div class="text-4xl mb-2">🏃</div>
 			<h1 class="text-3xl font-bold text-gray-900">SportSync</h1>
-			<p class="text-gray-500 text-sm mt-1">Erstelle deinen Account</p>
+			<p class="text-gray-500 text-sm mt-1">{$_('register.subtitle')}</p>
 		</div>
 
 		{#if errors.general}
@@ -90,9 +91,8 @@
 		{/if}
 
 		<form onsubmit={handleSubmit} novalidate class="space-y-4">
-
 			<div>
-				<label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+				<label for="email" class="block text-sm font-medium text-gray-700 mb-1">{$_('register.email')}</label>
 				<input
 					id="email"
 					type="email"
@@ -107,7 +107,7 @@
 			</div>
 
 			<div>
-				<label for="password" class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+				<label for="password" class="block text-sm font-medium text-gray-700 mb-1">{$_('register.password')}</label>
 				<input
 					id="password"
 					type="password"
@@ -120,7 +120,7 @@
 					<div class="mt-1.5 h-1 w-full bg-gray-200 rounded-full overflow-hidden">
 						<div class="h-full rounded-full transition-all {strengthColor[strength]} {strengthWidth[strength]}"></div>
 					</div>
-					<p class="mt-0.5 text-xs text-gray-400 capitalize">{strength}</p>
+					<p class="mt-0.5 text-xs text-gray-400">{$_('register.strength.' + strength)}</p>
 				{/if}
 				{#if errors.password}
 					<p class="mt-1 text-xs text-red-500">{errors.password}</p>
@@ -128,7 +128,7 @@
 			</div>
 
 			<div>
-				<label for="passwordConfirm" class="block text-sm font-medium text-gray-700 mb-1">Passwort bestätigen</label>
+				<label for="passwordConfirm" class="block text-sm font-medium text-gray-700 mb-1">{$_('register.confirmPassword')}</label>
 				<input
 					id="passwordConfirm"
 					type="password"
@@ -147,13 +147,13 @@
 				disabled={loading}
 				class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold rounded-lg transition cursor-pointer"
 			>
-				{loading ? 'Registrieren…' : 'Registrieren'}
+				{loading ? $_('register.submitting') : $_('register.submit')}
 			</button>
 		</form>
 
 		<p class="text-center text-sm text-gray-500 mt-6">
-			Bereits ein Account?
-			<a href="/login" class="text-orange-500 font-medium hover:underline">Anmelden</a>
+			{$_('register.hasAccount')}
+			<a href="/login" class="text-orange-500 font-medium hover:underline">{$_('register.loginLink')}</a>
 		</p>
 	</div>
 </div>
