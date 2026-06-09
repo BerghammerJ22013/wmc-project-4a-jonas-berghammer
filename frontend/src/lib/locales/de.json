@@ -63,6 +63,7 @@
   },
   "chats": {
     "title": "Chats",
+    "likes": "Mag mich",
     "noMatches": "Noch keine Matches",
     "noMatchesHint": "Swipe und finde deinen Sportpartner!",
     "matched": "Ihr habt euch gematcht 🎉",

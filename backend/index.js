@@ -227,6 +227,23 @@ app.post('/swipes', auth, async (req, res) => {
 
 // ─── Chats / Matches ─────────────────────────────────────────────────────────
 
+app.get('/likes/received', auth, async (req, res) => {
+  const db = await getDb();
+  const rows = await db.all(
+    `SELECT u.id, u.name, u.profile_picture, u.location
+     FROM swipes s
+     JOIN users u ON u.id = s.swiper_id
+     WHERE s.swiped_id = ?
+       AND s.direction = 'like'
+       AND NOT EXISTS (
+         SELECT 1 FROM swipes s2
+         WHERE s2.swiper_id = ? AND s2.swiped_id = s.swiper_id
+       )`,
+    req.user.id, req.user.id,
+  );
+  res.json(rows);
+});
+
 app.get('/matches', auth, async (req, res) => {
   const db = await getDb();
   const rows = await db.all(
