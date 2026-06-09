@@ -1,0 +1,109 @@
+{
+  "login": {
+    "subtitle": "Finde deinen Sport-Buddy",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "submitting": "Anmelden…",
+    "noAccount": "Noch kein Account?",
+    "registerLink": "Registrieren",
+    "errors": {
+      "emailRequired": "E-Mail ist erforderlich.",
+      "emailInvalid": "Ungültige E-Mail-Adresse.",
+      "passwordRequired": "Passwort ist erforderlich.",
+      "failed": "Anmeldung fehlgeschlagen.",
+      "serverUnreachable": "Server nicht erreichbar."
+    }
+  },
+  "register": {
+    "subtitle": "Erstelle deinen Account",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "submit": "Registrieren",
+    "submitting": "Registrieren…",
+    "hasAccount": "Bereits ein Account?",
+    "loginLink": "Anmelden",
+    "strength": {
+      "weak": "schwach",
+      "medium": "mittel",
+      "strong": "stark"
+    },
+    "errors": {
+      "emailRequired": "E-Mail ist erforderlich.",
+      "emailInvalid": "Ungültige E-Mail-Adresse.",
+      "passwordRequired": "Passwort ist erforderlich.",
+      "passwordWeak": "Min. 8 Zeichen, 1 Großbuchstabe und 1 Zahl.",
+      "confirmRequired": "Bitte Passwort bestätigen.",
+      "confirmMismatch": "Passwörter stimmen nicht überein.",
+      "failed": "Registrierung fehlgeschlagen.",
+      "serverUnreachable": "Server nicht erreichbar."
+    }
+  },
+  "nav": {
+    "discover": "Entdecken",
+    "chats": "Chats",
+    "profile": "Profil",
+    "logout": "Abmelden"
+  },
+  "discover": {
+    "noProfiles": "Keine weiteren Profile",
+    "noProfilesHint": "Schau später nochmal vorbei oder erweitere deinen Suchradius in den Einstellungen."
+  },
+  "card": {
+    "like": "Like",
+    "pass": "Pass",
+    "unknown": "Unbekannt"
+  },
+  "match": {
+    "title": "It's a Match!",
+    "subtitle": "Du und {name} habt euch gegenseitig geliked.",
+    "sendMessage": "Nachricht schreiben",
+    "keepDiscovering": "Weiter entdecken"
+  },
+  "chats": {
+    "title": "Chats",
+    "likes": "Mag mich",
+    "noMatches": "Noch keine Matches",
+    "noMatchesHint": "Swipe und finde deinen Sportpartner!",
+    "matched": "Ihr habt euch gematcht 🎉",
+    "selectChat": "Chat auswählen",
+    "selectChatHint": "Wähle links einen Match aus, um die Unterhaltung zu starten."
+  },
+  "chat": {
+    "noMessages": "Ihr habt euch gematcht!",
+    "writeFirst": "Schreib die erste Nachricht.",
+    "placeholder": "Nachricht...",
+    "back": "Zurück",
+    "unknown": "Unbekannt"
+  },
+  "profile": {
+    "noName": "Kein Name",
+    "changePicture": "Tippe auf das Bild um es zu ändern",
+    "uploading": "Wird hochgeladen…",
+    "pictureSaved": "Profilbild gespeichert!",
+    "sports": {
+      "title": "Meine Sportarten",
+      "hint": "Wähle alle Sportarten die du ausübst",
+      "selected": "{count} ausgewählt"
+    },
+    "personalData": "Persönliche Daten",
+    "name": "Name",
+    "age": "Alter",
+    "location": "Wohnort",
+    "bio": "Über mich",
+    "bioPlaceholder": "Erzähl etwas über dich und deinen Sport…",
+    "settings": "Einstellungen",
+    "searchRadius": "Suchradius",
+    "language": "Sprache",
+    "save": "Speichern",
+    "saving": "Speichern…",
+    "saved": "Gespeichert!",
+    "errors": {
+      "uploadFailed": "Fehler beim Upload",
+      "saveFailed": "Fehler beim Speichern",
+      "loadFailed": "Sportarten konnten nicht geladen werden",
+      "connectionError": "Verbindungsfehler"
+    }
+  }
+}
