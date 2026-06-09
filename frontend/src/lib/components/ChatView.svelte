@@ -1,7 +1,7 @@
 <script>
 	import { tick } from 'svelte';
-	import { io } from 'socket.io-client';
 	import { API, getToken } from '$lib/auth.js';
+	import { socketStore } from '$lib/socketStore.svelte.js';
 	import { userStore } from '$lib/userStore.svelte.js';
 
 	let { chat, onback } = $props();
@@ -30,6 +30,13 @@
 		}
 	}
 
+	async function handleNewMessage(msg) {
+		if (msg.match_id !== chat?.id) return;
+		messages = [...messages, msg];
+		await tick();
+		scrollToBottom();
+	}
+
 	async function send() {
 		const text = input.trim();
 		if (!text || sending) return;
@@ -44,7 +51,6 @@
 				},
 				body: JSON.stringify({ content: text }),
 			});
-			// message arrives via socket broadcast — no local push needed
 		} finally {
 			sending = false;
 		}
@@ -68,17 +74,10 @@
 		messages = [];
 		loadMessages(matchId);
 
-		const socket = io(API, { auth: { token: getToken() } });
+		socketStore.emit('join_match', matchId);
+		socketStore.on('new_message', handleNewMessage);
 
-		socket.emit('join_match', matchId);
-
-		socket.on('new_message', async (msg) => {
-			messages = [...messages, msg];
-			await tick();
-			scrollToBottom();
-		});
-
-		return () => socket.disconnect();
+		return () => socketStore.off('new_message', handleNewMessage);
 	});
 </script>
 
