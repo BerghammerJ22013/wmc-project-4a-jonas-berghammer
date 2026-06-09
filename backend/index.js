@@ -278,7 +278,7 @@ app.post('/matches/:id/messages', auth, async (req, res) => {
     'INSERT INTO messages (match_id, sender_id, content) VALUES (?, ?, ?)',
     req.params.id, req.user.id, content.trim(),
   );
-  const msg = await db.get('SELECT id, sender_id, content, is_read, created_at FROM messages WHERE id = ?', lastID);
+  const msg = await db.get('SELECT id, match_id, sender_id, content, is_read, created_at FROM messages WHERE id = ?', lastID);
   io.to(`match:${req.params.id}`).emit('new_message', msg);
   res.status(201).json(msg);
 });

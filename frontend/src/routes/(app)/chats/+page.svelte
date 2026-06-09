@@ -1,8 +1,10 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import ChatList from '$lib/components/ChatList.svelte';
 	import ChatView from '$lib/components/ChatView.svelte';
 	import { API, getToken } from '$lib/auth.js';
+	import { socketStore } from '$lib/socketStore.svelte.js';
+	import { userStore } from '$lib/userStore.svelte.js';
 
 	let chats = $state([]);
 	let loading = $state(true);
@@ -17,7 +19,29 @@
 		} finally {
 			loading = false;
 		}
+
+		socketStore.on('new_message', handleNewMessage);
 	});
+
+	onDestroy(() => socketStore.off('new_message', handleNewMessage));
+
+	function handleNewMessage(msg) {
+		chats = chats.map((c) => {
+			if (c.id !== msg.match_id) return c;
+			const isSelected = selectedChat?.id === c.id;
+			const isFromMe = msg.sender_id === userStore.user?.id;
+			return {
+				...c,
+				last_content: msg.content,
+				last_at: msg.created_at,
+				unread: isSelected || isFromMe ? c.unread : (c.unread ?? 0) + 1,
+			};
+		});
+		// keep list sorted by latest message
+		chats = [...chats].sort((a, b) =>
+			new Date(b.last_at ?? b.created_at) - new Date(a.last_at ?? a.created_at),
+		);
+	}
 </script>
 
 <div class="h-[calc(100vh-4rem)] flex overflow-hidden bg-white">
