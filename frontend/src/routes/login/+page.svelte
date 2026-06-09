@@ -1,7 +1,9 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { _ } from 'svelte-i18n';
 	import { setToken } from '$lib/auth.js';
 	import { userStore } from '$lib/userStore.svelte.js';
+	import { t } from '$lib/i18n.js';
 
 	let email = $state('');
 	let password = $state('');
@@ -14,9 +16,9 @@
 
 	function validate() {
 		const e = { email: '', password: '', general: '' };
-		if (!email) e.email = 'E-Mail ist erforderlich.';
-		else if (!validateEmail(email)) e.email = 'Ungültige E-Mail-Adresse.';
-		if (!password) e.password = 'Passwort ist erforderlich.';
+		if (!email) e.email = t('login.errors.emailRequired');
+		else if (!validateEmail(email)) e.email = t('login.errors.emailInvalid');
+		if (!password) e.password = t('login.errors.passwordRequired');
 		errors = e;
 		return !e.email && !e.password;
 	}
@@ -38,15 +40,15 @@
 			const data = await res.json();
 
 			if (!res.ok) {
-				errors.general = data.error ?? 'Anmeldung fehlgeschlagen.';
+				errors.general = data.error ?? t('login.errors.failed');
 				return;
 			}
 
 			setToken(data.token);
-				await userStore.load();
-				goto('/discover');
+			await userStore.load();
+			goto('/discover');
 		} catch {
-			errors.general = 'Server nicht erreichbar.';
+			errors.general = t('login.errors.serverUnreachable');
 		} finally {
 			loading = false;
 		}
@@ -59,7 +61,7 @@
 		<div class="text-center mb-8">
 			<div class="text-4xl mb-2">🏃</div>
 			<h1 class="text-3xl font-bold text-gray-900">SportSync</h1>
-			<p class="text-gray-500 text-sm mt-1">Finde deinen Sport-Buddy</p>
+			<p class="text-gray-500 text-sm mt-1">{$_('login.subtitle')}</p>
 		</div>
 
 		{#if errors.general}
@@ -69,9 +71,8 @@
 		{/if}
 
 		<form onsubmit={handleSubmit} novalidate class="space-y-4">
-
 			<div>
-				<label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+				<label for="email" class="block text-sm font-medium text-gray-700 mb-1">{$_('login.email')}</label>
 				<input
 					id="email"
 					type="email"
@@ -86,7 +87,7 @@
 			</div>
 
 			<div>
-				<label for="password" class="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+				<label for="password" class="block text-sm font-medium text-gray-700 mb-1">{$_('login.password')}</label>
 				<input
 					id="password"
 					type="password"
@@ -105,13 +106,13 @@
 				disabled={loading}
 				class="w-full py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold rounded-lg transition cursor-pointer"
 			>
-				{loading ? 'Anmelden…' : 'Anmelden'}
+				{loading ? $_('login.submitting') : $_('login.submit')}
 			</button>
 		</form>
 
 		<p class="text-center text-sm text-gray-500 mt-6">
-			Noch kein Account?
-			<a href="/register" class="text-orange-500 font-medium hover:underline">Registrieren</a>
+			{$_('login.noAccount')}
+			<a href="/register" class="text-orange-500 font-medium hover:underline">{$_('login.registerLink')}</a>
 		</p>
 	</div>
 </div>

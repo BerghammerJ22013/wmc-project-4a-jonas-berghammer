@@ -1,7 +1,9 @@
 <script>
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import { getToken, API } from '$lib/auth.js';
 	import { userStore } from '$lib/userStore.svelte.js';
+	import { locale, t } from '$lib/i18n.js';
 
 	let allSports = $state([]);
 	let sportsLoaded = $state(false);
@@ -59,7 +61,7 @@
 			allSports = await res.json();
 			sportsLoaded = true;
 		} catch {
-			error = 'Sportarten konnten nicht geladen werden';
+			error = t('profile.errors.loadFailed');
 		}
 
 		// Fallback: user not yet in store (e.g. direct page load)
@@ -88,14 +90,14 @@
 			if (res.ok) {
 				pictureUrl = `${API}/uploads/${data.filename}`;
 				userStore.update({ profile_picture: data.filename });
-				pictureMsg = 'Profilbild gespeichert!';
+				pictureMsg = t('profile.pictureSaved');
 				pictureMsgOk = true;
 			} else {
-				pictureMsg = data.error || 'Fehler beim Upload';
+				pictureMsg = data.error || t('profile.errors.uploadFailed');
 				pictureMsgOk = false;
 			}
 		} catch {
-			pictureMsg = 'Verbindungsfehler';
+			pictureMsg = t('profile.errors.connectionError');
 			pictureMsgOk = false;
 		} finally {
 			uploading = false;
@@ -126,15 +128,15 @@
 			if (res.ok) {
 				const updatedSports = allSports.filter((s) => selectedSports.includes(s.id));
 				userStore.update({ sports: updatedSports });
-				sportsMsg = 'Sportarten gespeichert!';
+				sportsMsg = t('profile.saved');
 				sportsMsgOk = true;
 			} else {
 				const data = await res.json();
-				sportsMsg = data.error || 'Fehler beim Speichern';
+				sportsMsg = data.error || t('profile.errors.saveFailed');
 				sportsMsgOk = false;
 			}
 		} catch {
-			sportsMsg = 'Verbindungsfehler';
+			sportsMsg = t('profile.errors.connectionError');
 			sportsMsgOk = false;
 		} finally {
 			savingSports = false;
@@ -167,15 +169,15 @@
 			});
 			if (res.ok) {
 				userStore.update({ name, age: age !== '' ? Number(age) : null, location, bio, search_radius: searchRadius, language });
-				dataMsg = 'Daten gespeichert!';
+				dataMsg = t('profile.saved');
 				dataMsgOk = true;
 			} else {
 				const data = await res.json();
-				dataMsg = data.error || 'Fehler beim Speichern';
+				dataMsg = data.error || t('profile.errors.saveFailed');
 				dataMsgOk = false;
 			}
 		} catch {
-			dataMsg = 'Verbindungsfehler';
+			dataMsg = t('profile.errors.connectionError');
 			dataMsgOk = false;
 		} finally {
 			savingData = false;
@@ -208,15 +210,17 @@
 			});
 			if (res.ok) {
 				userStore.update({ search_radius: searchRadius, language });
-				settingsMsg = 'Einstellungen gespeichert!';
+				locale.set(language);
+				localStorage.setItem('sportsync_lang', language);
+				settingsMsg = t('profile.saved');
 				settingsMsgOk = true;
 			} else {
 				const data = await res.json();
-				settingsMsg = data.error || 'Fehler beim Speichern';
+				settingsMsg = data.error || t('profile.errors.saveFailed');
 				settingsMsgOk = false;
 			}
 		} catch {
-			settingsMsg = 'Verbindungsfehler';
+			settingsMsg = t('profile.errors.connectionError');
 			settingsMsgOk = false;
 		} finally {
 			savingSettings = false;
@@ -264,26 +268,26 @@
 				<input bind:this={fileInput} type="file" accept="image/*" class="hidden" onchange={uploadPicture} />
 
 				<div class="text-center">
-					<p class="font-semibold text-gray-900">{u.name || 'Kein Name'}</p>
+					<p class="font-semibold text-gray-900">{u.name || $_('profile.noName')}</p>
 					<p class="text-sm text-gray-500">{u.email}</p>
 				</div>
 
 				{#if uploading}
 					<p class="text-sm text-orange-500 flex items-center gap-1">
 						<span class="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin inline-block"></span>
-						Wird hochgeladen…
+						{$_('profile.uploading')}
 					</p>
 				{:else if pictureMsg}
 					<p class="text-sm {pictureMsgOk ? 'text-green-600' : 'text-red-500'}">{pictureMsg}</p>
 				{/if}
 
-				<p class="text-xs text-gray-400">Tippe auf das Bild um es zu ändern</p>
+				<p class="text-xs text-gray-400">{$_('profile.changePicture')}</p>
 			</div>
 
 			<!-- Sportarten -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-				<h2 class="font-semibold text-gray-900 mb-1">Meine Sportarten</h2>
-				<p class="text-xs text-gray-400 mb-4">Wähle alle Sportarten die du ausübst</p>
+				<h2 class="font-semibold text-gray-900 mb-1">{$_('profile.sports.title')}</h2>
+				<p class="text-xs text-gray-400 mb-4">{$_('profile.sports.hint')}</p>
 
 				{#if !sportsLoaded}
 					<div class="h-10 bg-gray-100 rounded-xl animate-pulse mb-4"></div>
@@ -305,13 +309,13 @@
 				{/if}
 
 				<div class="flex items-center justify-between">
-					<span class="text-xs text-gray-400">{selectedSports.length} ausgewählt</span>
+					<span class="text-xs text-gray-400">{$_('profile.sports.selected', { values: { count: selectedSports.length } })}</span>
 					<button
 						onclick={saveSports}
 						disabled={savingSports}
 						class="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
 					>
-						{savingSports ? 'Speichern…' : 'Speichern'}
+						{savingSports ? $_('profile.saving') : $_('profile.save')}
 					</button>
 				</div>
 
@@ -322,22 +326,22 @@
 
 			<!-- Persönliche Daten -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-				<h2 class="font-semibold text-gray-900 mb-4">Persönliche Daten</h2>
+				<h2 class="font-semibold text-gray-900 mb-4">{$_('profile.personalData')}</h2>
 
 				<div class="space-y-3">
 					<div>
-						<label class="block text-xs font-medium text-gray-500 mb-1" for="name">Name</label>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="name">{$_('profile.name')}</label>
 						<input
 							id="name"
 							type="text"
 							bind:value={name}
-							placeholder="Dein Name"
+							placeholder={$_('profile.name')}
 							class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
 						/>
 					</div>
 
 					<div>
-						<label class="block text-xs font-medium text-gray-500 mb-1" for="age">Alter</label>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="age">{$_('profile.age')}</label>
 						<input
 							id="age"
 							type="number"
@@ -350,7 +354,7 @@
 					</div>
 
 					<div>
-						<label class="block text-xs font-medium text-gray-500 mb-1" for="location">Wohnort</label>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="location">{$_('profile.location')}</label>
 						<input
 							id="location"
 							type="text"
@@ -361,11 +365,11 @@
 					</div>
 
 					<div>
-						<label class="block text-xs font-medium text-gray-500 mb-1" for="bio">Über mich</label>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="bio">{$_('profile.bio')}</label>
 						<textarea
 							id="bio"
 							bind:value={bio}
-							placeholder="Erzähl etwas über dich und deinen Sport…"
+							placeholder={$_('profile.bioPlaceholder')}
 							rows="3"
 							class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"
 						></textarea>
@@ -378,7 +382,7 @@
 						disabled={savingData}
 						class="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
 					>
-						{savingData ? 'Speichern…' : 'Speichern'}
+						{savingData ? $_('profile.saving') : $_('profile.save')}
 					</button>
 				</div>
 
@@ -389,13 +393,13 @@
 
 			<!-- Einstellungen -->
 			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-				<h2 class="font-semibold text-gray-900 mb-4">Einstellungen</h2>
+				<h2 class="font-semibold text-gray-900 mb-4">{$_('profile.settings')}</h2>
 
 				<div class="space-y-5">
 					<!-- Suchradius -->
 					<div>
 						<div class="flex justify-between items-center mb-2">
-							<label class="text-xs font-medium text-gray-500" for="radius">Suchradius</label>
+							<label class="text-xs font-medium text-gray-500" for="radius">{$_('profile.searchRadius')}</label>
 							<span class="text-sm font-semibold text-orange-500">{searchRadius} km</span>
 						</div>
 						<input
@@ -415,7 +419,7 @@
 
 					<!-- Sprache -->
 					<div>
-						<label class="block text-xs font-medium text-gray-500 mb-1" for="language">Sprache</label>
+						<label class="block text-xs font-medium text-gray-500 mb-1" for="language">{$_('profile.language')}</label>
 						<select
 							id="language"
 							bind:value={language}
@@ -433,7 +437,7 @@
 						disabled={savingSettings}
 						class="px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
 					>
-						{savingSettings ? 'Speichern…' : 'Speichern'}
+						{savingSettings ? $_('profile.saving') : $_('profile.save')}
 					</button>
 				</div>
 

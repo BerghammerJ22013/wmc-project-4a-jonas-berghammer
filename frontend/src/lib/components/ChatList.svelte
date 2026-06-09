@@ -1,4 +1,5 @@
 <script>
+	import { _ } from 'svelte-i18n';
 	import { API } from '$lib/auth.js';
 
 	let { chats, selectedId, onselect } = $props();
@@ -17,7 +18,7 @@
 
 <div class="flex flex-col h-full">
 	<div class="px-4 py-4 border-b border-gray-100">
-		<h1 class="text-xl font-bold text-gray-900">Chats</h1>
+		<h1 class="text-xl font-bold text-gray-900">{$_('chats.title')}</h1>
 	</div>
 
 	{#if chats.length === 0}
@@ -27,8 +28,8 @@
 					<path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z" clip-rule="evenodd" />
 				</svg>
 			</div>
-			<p class="text-sm font-medium text-gray-700 mb-1">Noch keine Matches</p>
-			<p class="text-xs text-gray-400">Swipe und finde deinen Sportpartner!</p>
+			<p class="text-sm font-medium text-gray-700 mb-1">{$_('chats.noMatches')}</p>
+			<p class="text-xs text-gray-400">{$_('chats.noMatchesHint')}</p>
 		</div>
 	{:else}
 		<ul class="flex-1 overflow-y-auto">
@@ -65,7 +66,7 @@
 								<span class="text-xs text-gray-400 shrink-0 ml-2">{formatTime(chat.last_at)}</span>
 							</div>
 							<p class="text-xs text-gray-500 truncate {chat.unread > 0 ? 'font-medium text-gray-700' : ''}">
-								{chat.last_content ?? 'Ihr habt euch gematcht 🎉'}
+								{chat.last_content ?? $_('chats.matched')}
 							</p>
 						</div>
 					</button>
