@@ -72,7 +72,10 @@
         {chats}
         {likes}
         selectedId={selectedChat?.id}
-        onselect={(chat) => (selectedChat = chat)}
+        onselect={(chat) => {
+          selectedChat = chat;
+          chats = chats.map((c) => (c.id === chat.id ? { ...c, unread: 0 } : c));
+        }}
         onlike={likeback}
       />
     {/if}
