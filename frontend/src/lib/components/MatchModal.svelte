@@ -28,7 +28,7 @@
       </div>
 
       <h2>{$_('match.title')}</h2>
-      <p>{$_('match.subtitle', { name: user.name })}</p>
+      <p>{$_('match.subtitle', { values: { name: user.name } })}</p>
 
       <div class="actions">
         <a href="/chats" class="btn-primary" onclick={onclose}>{$_('match.sendMessage')}</a>
